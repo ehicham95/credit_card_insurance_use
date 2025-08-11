@@ -6,6 +6,9 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler
 
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 import umap.umap_ as umap
 
 import plotly.graph_objects as go
@@ -156,46 +159,89 @@ class ClusterVisualizer:
         # PCA
         pca = PCA(n_components=2)
         pca_result = pca.fit_transform(df_scaled)
-        
+
         # t-SNE
         tsne = TSNE(n_components=2, random_state=42, perplexity=30, max_iter=1000)
         tsne_result = tsne.fit_transform(df_scaled)
-        
-        # Plot
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-        
-        # PCA Plot
-        scatter1 = ax1.scatter(
-            pca_result[:, 0], 
-            pca_result[:, 1], 
-            c=cluster_labels_numeric, 
-            cmap='viridis', 
-            alpha=0.6
+
+        # Create subplots
+        fig = make_subplots(rows=1, cols=2, subplot_titles=(
+            f'PCA Visualization (Explained Variance: {pca.explained_variance_ratio_.sum():.3f})',
+            't-SNE Visualization'
+        ))
+
+        # Add PCA trace
+        fig.add_trace(
+            go.Scatter(
+                x=pca_result[:, 0],
+                y=pca_result[:, 1],
+                mode='markers',
+                marker=dict(
+                    color=cluster_labels_numeric,
+                    colorscale='Viridis',
+                    opacity=0.6,
+                    showscale=True
+                ),
+                name='PCA'
+            ),
+            row=1, col=1
         )
-        ax1.set_title(f'PCA Visualization\nExplained Variance: {pca.explained_variance_ratio_.sum():.3f}')
-        ax1.set_xlabel('PC1')
-        ax1.set_ylabel('PC2')
-        plt.colorbar(scatter1, ax=ax1, label='Cluster')
-        
-        # t-SNE Plot
-        scatter2 = ax2.scatter(
-            tsne_result[:, 0], 
-            tsne_result[:, 1], 
-            c=cluster_labels_numeric, 
-            cmap='viridis', 
-            alpha=0.6
+
+        # Add t-SNE trace
+        fig.add_trace(
+            go.Scatter(
+                x=tsne_result[:, 0],
+                y=tsne_result[:, 1],
+                mode='markers',
+                marker=dict(
+                    color=cluster_labels_numeric,
+                    colorscale='Viridis',
+                    opacity=0.6,
+                    showscale=True
+                ),
+                name='t-SNE'
+            ),
+            row=1, col=2
         )
-        ax2.set_title('t-SNE Visualization')
-        ax2.set_xlabel('t-SNE1')
-        ax2.set_ylabel('t-SNE2')
-        plt.colorbar(scatter2, ax=ax2, label='Cluster')
-        
-        plt.tight_layout()
-        plt.show()
-        
+
+        # Update layout
+        fig.update_layout(
+            height=600,
+            width=1200,
+            title_text="Cluster Visualization with PCA and t-SNE",
+            scene=dict(
+                xaxis_title='PC1',
+                yaxis_title='PC2'
+            ),
+            scene2=dict(
+                xaxis_title='t-SNE1',
+                yaxis_title='t-SNE2'
+            )
+        )
+
+        # Update xaxis and yaxis for PCA plot
+        fig.update_xaxes(title_text='PC1', row=1, col=1)
+        fig.update_yaxes(title_text='PC2', row=1, col=1)
+
+        # Update xaxis and yaxis for t-SNE plot
+        fig.update_xaxes(title_text='t-SNE1', row=1, col=2)
+        fig.update_yaxes(title_text='t-SNE2', row=1, col=2)
+
+        # Show plot
+        fig.show(renderer='vscode')
+
         return pca_result, tsne_result
     
     def create_umap_visualization(self, df_scaled, cluster_labels, n_neighbors=15, min_dist=0.1):
+        # Convert cluster_labels to numeric if needed
+        
+        if isinstance(cluster_labels, pd.DataFrame):
+            cluster_labels = cluster_labels.squeeze()  # or cluster_labels.iloc[:, 0]
+        elif not np.issubdtype(cluster_labels.dtype, np.number):
+            cluster_labels_numeric = pd.factorize(cluster_labels)[0]
+        else:
+            cluster_labels_numeric = cluster_labels
+
         # Initialize UMAP
         umap_reducer = umap.UMAP(
             n_neighbors=n_neighbors,
@@ -203,19 +249,40 @@ class ClusterVisualizer:
             n_components=2,
             random_state=42
         )
-        
+
         # Fit and transform
         umap_result = umap_reducer.fit_transform(df_scaled)
-        
-        # Plot
-        plt.figure(figsize=(10, 8))
-        scatter = plt.scatter(umap_result[:, 0], umap_result[:, 1], 
-                            c=cluster_labels, cmap='viridis', alpha=0.6, s=20)
-        plt.colorbar(scatter, label='Cluster')
-        plt.title('UMAP Visualization of Payment Behavior Clusters')
-        plt.xlabel('UMAP 1')
-        plt.ylabel('UMAP 2')
-        plt.show()
+
+        # Create Plotly figure
+        fig = go.Figure()
+
+        # Add UMAP trace
+        fig.add_trace(go.Scatter(
+            x=umap_result[:, 0],
+            y=umap_result[:, 1],
+            mode='markers',
+            marker=dict(
+                color=cluster_labels_numeric,
+                colorscale='Viridis',
+                opacity=0.6,
+                size=5,
+                showscale=True
+            ),
+            text=cluster_labels_numeric,  # This can be used for hover text
+            hoverinfo='text'
+        ))
+
+        # Update layout
+        fig.update_layout(
+            title='UMAP Visualization of Payment Behavior Clusters',
+            xaxis_title='UMAP 1',
+            yaxis_title='UMAP 2',
+            height=600,
+            width=800
+        )
+
+        # Show plot
+        fig.show(renderer='vscode')
         
         return umap_result
     
