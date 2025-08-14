@@ -69,13 +69,13 @@ class ClusterVisualizer:
         
         ax3 = axes[1, 0]
         feature_var_df = pd.DataFrame({'feature': self.risk_features, 'variance': feature_vars})
-        feature_var_df = feature_var_df[feature_var_df['variance'] >= 0.5]  # Filter out features with zero variance
+        feature_var_df = feature_var_df[feature_var_df['variance'] >= 0.1e6]
         feature_var_df = feature_var_df.sort_values('variance', ascending=True)
         discriminatory_features = feature_var_df['feature'].tolist()
         
         bars = ax3.barh(feature_var_df['feature'], feature_var_df['variance'])
         ax3.set_title('Feature Discrimination Power\n(Variance of Cluster Means)', 
-                     fontsize=14, fontweight='bold')
+                        fontsize=14, fontweight='bold')
         ax3.set_xlabel('Variance')
         
         # 4. Silhouette-like analysis (distance from cluster centroids)

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import kruskal
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
@@ -201,7 +202,7 @@ class ClusterStabilityValidator:
         # Bootstrap stability
         if 'bootstrap' in self.stability_results:
             axes[0,0].hist(self.stability_results['bootstrap']['ari_scores'], bins=20, alpha=0.7)
-            axes[0,0].set_title('Bootstrap ARI Distribution')
+            axes[0,0].set_title('Bootstrap ARI Distribution (Bootstrap)')
             axes[0,0].set_xlabel('ARI Score')
         
         # Subsample stability
@@ -210,7 +211,7 @@ class ClusterStabilityValidator:
             means = [self.stability_results['subsample'][r]['ari_mean'] for r in ratios]
             stds = [self.stability_results['subsample'][r]['ari_std'] for r in ratios]
             axes[0,1].errorbar(ratios, means, yerr=stds, marker='o')
-            axes[0,1].set_title('Stability vs Sample Size')
+            axes[0,1].set_title('Stability vs Sample Size (Subsample)')
             axes[0,1].set_xlabel('Sample Ratio')
             axes[0,1].set_ylabel('ARI Score')
         
@@ -219,18 +220,66 @@ class ClusterStabilityValidator:
             noise_levels = list(self.stability_results['perturbation'].keys())
             means = [self.stability_results['perturbation'][n]['ari_mean'] for n in noise_levels]
             axes[1,0].plot(noise_levels, means, marker='o')
-            axes[1,0].set_title('Stability vs Noise Level')
+            axes[1,0].set_title('Stability vs Noise Level (Perturbation)')
             axes[1,0].set_xlabel('Noise Level')
             axes[1,0].set_ylabel('ARI Score')
         
         # K-fold stability
         if 'k_fold' in self.stability_results:
             axes[1,1].hist(self.stability_results['k_fold']['ari_scores'], bins=15, alpha=0.7)
-            axes[1,1].set_title('K-Fold ARI Distribution')
+            axes[1,1].set_title('K-Fold ARI Distribution (K-Fold)')
             axes[1,1].set_xlabel('ARI Score')
         
         plt.tight_layout()
-        return fig
+        # return fig
+
+
+    def improved_feature_testing(self, df, cluster_col='cluster_labels', features=None):
+        """Better p-value calculation that shows actual precision"""
+
+        if features is None:
+            features = [col for col in df.columns if col != cluster_col]
+
+        results = []
+        
+        for feature in features:
+            if not pd.api.types.is_numeric_dtype(df[feature]):
+                continue
+                
+            # Get data for each cluster
+            cluster_groups = []
+            for cluster_id in sorted(df[cluster_col].unique()):
+                group_data = df[df[cluster_col] == cluster_id][feature].dropna().values
+                if len(group_data) > 1:
+                    cluster_groups.append(group_data)
+            
+            if len(cluster_groups) < 2:
+                continue
+                
+            try:
+                # Use Kruskal-Wallis test
+                h_stat, p_val = kruskal(*cluster_groups)
+                
+                # Format p-value properly
+                if p_val == 0.0:
+                    p_formatted = "< 1e-16"  # Python's floating point limit
+                elif p_val < 0.001:
+                    p_formatted = f"{p_val:.2e}"  # Scientific notation
+                else:
+                    p_formatted = f"{p_val:.6f}"
+                
+                results.append({
+                    'Feature': feature,
+                    'H_Statistic': round(h_stat, 2),
+                    'P_Value': p_formatted,
+                    'Significant': 'Yes' if p_val < 0.05 else 'No'
+                })
+                
+            except Exception as e:
+                continue
+        
+        return pd.DataFrame(results)
+
 
 # Example usage
 # validator = ClusterStabilityValidator(KMeans, n_clusters=5)
