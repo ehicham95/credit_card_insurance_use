@@ -147,6 +147,7 @@ env.bak/
 venv.bak/
 my_env
 my_env/
+.vscode
 
 # Spyder project settings
 .spyderproject
@@ -188,5 +189,8 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+portfolio_presentation.html
+prompts
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
