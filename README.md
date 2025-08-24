@@ -4,7 +4,6 @@
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
 ![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.4+-orange)
 ![Power BI](https://img.shields.io/badge/Power%20BI-Interactive-yellow)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## 🎯 Project Overview & My Journey
 
