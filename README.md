@@ -301,10 +301,9 @@ I'm actively building my data analytics portfolio and seeking opportunities to a
 
 **Let's connect and discuss data analytics opportunities:**
 
-- **LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)
-- **Email**: your.email@example.com  
-- **GitHub**: [https://github.com/yourusername](https://github.com/yourusername)
-- **Portfolio**: [Your Portfolio Website](https://yourportfolio.com)
+- **LinkedIn**: [helhadrachi](https://linkedin.com/in/yourprofile)
+- **Email**: hicham.elhadrachi@gmail.com  
+- **GitHub**: [ehicham95](https://github.com/ehicham95)
 
 **I'm particularly interested in:**
 - Data Analytics roles in financial services
